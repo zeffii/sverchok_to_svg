@@ -1,6 +1,6 @@
 import os
 import re
-import colorsys
+import math
 import bpy
 import sverchok
 from sverchok.utils.sv_node_utils import recursive_framed_location_finder as absloc
@@ -42,9 +42,17 @@ for n in nt.nodes:
     generate_bbox(x, y)
     nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, inputs, outputs)
 
-doc = et.Element('svg', width='1480', height='960', version='1.1', xmlns='http://www.w3.org/2000/svg')
-gdoc = et.SubElement(doc, "g", transform=f"translate({430}, {330})")
-ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {330})", style="stroke-width: 3.0;")
+bw = abs(bbox[0][1] - bbox[0][0]) + 20
+bh = abs(bbox[1][1] - bbox[1][0]) + 20
+print(bw, bh)
+
+for n, k in nt_dict.items():
+    k.abs_location = k.abs_location[0], bh - k.abs_location[1]
+
+
+doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
+gdoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})")
+ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})", style="stroke-width: 3.0;")
 
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
@@ -84,7 +92,8 @@ def calculate_offset(node, socket, sockets=None):
 socket_distance = 5
 for link in nt.links:
     n1, s1, n2, s2 = link.from_node, link.from_socket, link.to_node, link.to_socket
-    (x1, y1), (x2, y2) = absloc(n1, n1.location), absloc(n2, n2.location)
+    (x1, y1), (x2, y2) = nt_dict[n1.name].abs_location, nt_dict[n2.name].abs_location
+    #absloc(n1, n1.location), absloc(n2, n2.location)
 
     # y1 and y2 should be offset depending on the visible socket indices. using info from s1 and s2
     y1_offset = calculate_offset(n1, s1, n1.outputs)
