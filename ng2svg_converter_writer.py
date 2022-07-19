@@ -1,6 +1,6 @@
 import os
 import re
-
+import colorsys
 import bpy
 import sverchok
 from sverchok.utils.sv_node_utils import recursive_framed_location_finder as absloc
@@ -18,8 +18,8 @@ class NodeProxy():
     label: str
     abs_location: tuple
     width: float
-    num_linked_inputs: dict
-    num_linked_outputs: dict
+    inputs: dict
+    outputs: dict
 
 
 nt = bpy.data.node_groups['NodeTree']
@@ -32,13 +32,16 @@ def generate_bbox(x, y):
     bbox[1][1] = y if not bbox[1][1] else max(bbox[1][1], y)
 
 for n in nt.nodes:
-    inputs = {s.name: (s.index, s.is_linked) for s in n.inputs if hasattr(s, "index")} 
-    outputs = {s.name: (s.index, s.is_linked) for s in n.outputs if hasattr(s, "index")}
+    if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
+        outputs, inputs = {}, {}
+    else:
+        inputs = {s.name: (s.index, s.color) for s in n.inputs if not (s.hide or not s.enabled)} 
+        outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
     
     x, y = absloc(n, n.location)
     generate_bbox(x, y)
     nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, inputs, outputs)
-        
+
 doc = et.Element('svg', width='1480', height='960', version='1.1', xmlns='http://www.w3.org/2000/svg')
 gdoc = et.SubElement(doc, "g", transform=f"translate({430}, {330})")
 ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {330})", style="stroke-width: 3.0;")
@@ -49,8 +52,16 @@ for k, v in nt_dict.items():
     t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
     t.text = v.name
 
-#       style="fill-opacity: .25;")
-# https://github.com/nortikin/sverchok/issues/2360
+    sog = et.SubElement(g, "g", width="400", height="200")
+    for idx, (socket_name, socket) in enumerate(v.inputs.items()):
+        rgb = f"rgb{tuple(int(i*255) for i in socket[1][:3])}"
+        ypos = f"{idx*15}"
+        et.SubElement(sog, "circle", r="5", cy=ypos, fill=rgb, id=f"index_{idx}")
+    for idx, (socket_name, socket) in enumerate(v.outputs.items()):
+        rgb = f"rgb{tuple(int(i*255) for i in socket[1][:3])}"
+        ypos = f"{idx*15}"
+        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=ypos, fill=rgb, id=f"index_{idx}")    
+
 calculated_offsets = {}
 def calculate_offset(node, socket, sockets=None):
     if socket.bl_idname == "NodeReroute": return 0
