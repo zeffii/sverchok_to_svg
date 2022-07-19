@@ -18,6 +18,7 @@ class NodeProxy():
     label: str
     abs_location: tuple
     width: float
+    color: tuple
     inputs: dict
     outputs: dict
 
@@ -34,17 +35,22 @@ def generate_bbox(x, y):
 for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
         outputs, inputs = {}, {}
+        color = [0.582067, 0.608000, 0.000000]
     else:
         inputs = {s.name: (s.index, s.color) for s in n.inputs if not (s.hide or not s.enabled)} 
         outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
+        color = n.color
     
     x, y = absloc(n, n.location)
     generate_bbox(x, y)
-    nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, inputs, outputs)
+    nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, color, inputs, outputs)
 
 bw = abs(bbox[0][1] - bbox[0][0]) + 20
 bh = abs(bbox[1][1] - bbox[1][0]) + 20
 print(bw, bh)
+
+def convert_rgb(a):
+    return f"rgb{tuple(int(i*255) for i in a)}"
 
 for n, k in nt_dict.items():
     k.abs_location = k.abs_location[0], bh - k.abs_location[1]
@@ -57,7 +63,7 @@ ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})", style="stroke
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
     node_height = (max(len(v.inputs), len(v.outputs)) * 15)
-    m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill='rgb(74, 177, 231)')
+    m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
     t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
     t.text = v.name
 
@@ -112,6 +118,5 @@ for link in nt.links:
 svg_filename = "wooooop"
 svg_path = os.path.join(bpy.path.abspath('//'), svg_filename + '.svg')
 with open(svg_path, 'w') as f:
-    f.write('\n\n')
     f.write(f"<!--{bbox}-->\n")
     f.write(et.tostring(doc, pretty_print=True).decode())
