@@ -48,7 +48,8 @@ ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {330})", style="stro
 
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
-    m = et.SubElement(g, "rect", width=str(v.width), height=str(40), fill='rgb(74, 177, 231)')
+    node_height = (max(len(v.inputs), len(v.outputs)) * 15)
+    m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill='rgb(74, 177, 231)')
     t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
     t.text = v.name
 
