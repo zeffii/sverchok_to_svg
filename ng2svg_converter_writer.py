@@ -69,13 +69,9 @@ for k, v in nt_dict.items():
 
     sog = et.SubElement(g, "g", width="400", height="200")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
-        rgb = f"rgb{tuple(int(i*255) for i in socket[1][:3])}"
-        ypos = f"{idx*15}"
-        et.SubElement(sog, "circle", r="5", cy=ypos, fill=rgb, id=f"index_{idx}")
+        et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
-        rgb = f"rgb{tuple(int(i*255) for i in socket[1][:3])}"
-        ypos = f"{idx*15}"
-        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=ypos, fill=rgb, id=f"index_{idx}")    
+        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")    
 
 calculated_offsets = {}
 def calculate_offset(node, socket, sockets=None):
