@@ -36,6 +36,8 @@ for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
         outputs, inputs = {}, {}
         color = [1.0, 0.91764, 0]
+        if n.bl_idname == "NodeFrame":
+            color = n.color 
     else:
         inputs = {s.name: (s.index, s.color) for s in n.inputs if not (s.hide or not s.enabled)} 
         outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
@@ -53,12 +55,12 @@ def convert_rgb(a):
     return f"rgb{tuple(int(i*255) for i in a)}"
 
 for n, k in nt_dict.items():
-    k.abs_location = k.abs_location[0], bh - k.abs_location[1]
+    k.abs_location = int(k.abs_location[0]), int(bh - k.abs_location[1])
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
-gdoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})")
-ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})", style="stroke-width: 3.0;")
+gdoc = et.SubElement(doc, "g", transform=f"translate({bw/2}, {0})")
+ldoc = et.SubElement(doc, "g", transform=f"translate({bw/2}, {0})", style="stroke-width: 3.0;")
 
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
@@ -66,13 +68,20 @@ for k, v in nt_dict.items():
     
     bl_idname = nt.nodes.get(v.name).bl_idname
     if bl_idname == "NodeReroute":
-        m = et.SubElement(g, "circle", r="10", cx=str(v.width/2), fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
+        m = et.SubElement(g, "circle", r="10", cx=str(v.width/2), fill=convert_rgb(v.color[:3]))
+    elif bl_idname == "NodeFrame":
+        height = nt.nodes.get(v.name).height # dimensions[1]
+        #m = et.SubElement(g, "rect", x=str(int(v.width/2)), y=str(-height), width=str(v.width), height=str(height), fill=convert_rgb(v.color[:3]))
+        m = et.SubElement(g, "rect", width=str(v.width), y=str(-height), height=str(height), fill=convert_rgb(v.color[:3]), style="opacity: 0.3;")
     else:
-        m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
+        m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3]))
     
     if not bl_idname == "NodeReroute":
         t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
         t.text = v.name
+    
+    if bl_idname in {"NodeReroute", "NodeFrame"}:
+        continue
 
     sog = et.SubElement(g, "g", width="400", height="200")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
@@ -102,7 +111,6 @@ socket_distance = 5
 for link in nt.links:
     n1, s1, n2, s2 = link.from_node, link.from_socket, link.to_node, link.to_socket
     (x1, y1), (x2, y2) = nt_dict[n1.name].abs_location, nt_dict[n2.name].abs_location
-    #absloc(n1, n1.location), absloc(n2, n2.location)
 
     # y1 and y2 should be offset depending on the visible socket indices. using info from s1 and s2
     y1_offset = calculate_offset(n1, s1, n1.outputs)
