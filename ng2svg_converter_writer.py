@@ -43,12 +43,12 @@ for n in nt.nodes:
         outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
         color = n.color
     
-    x, y = absloc(n, n.location)
+    x, y = absloc(n, n.location[:])
     generate_bbox(x, y)
     nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, color, inputs, outputs)
 
-bw = abs(bbox[0][1] - bbox[0][0]) + 20
-bh = abs(bbox[1][1] - bbox[1][0]) + 20
+bw = abs(bbox[0][1] - bbox[0][0])
+bh = abs(bbox[1][1] - bbox[1][0])
 print(bw, bh)
 
 def convert_rgb(a):
