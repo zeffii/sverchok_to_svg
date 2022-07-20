@@ -35,7 +35,7 @@ def generate_bbox(x, y):
 for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
         outputs, inputs = {}, {}
-        color = [0.582067, 0.608000, 0.000000]
+        color = [1.0, 0.91764, 0]
     else:
         inputs = {s.name: (s.index, s.color) for s in n.inputs if not (s.hide or not s.enabled)} 
         outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
@@ -63,9 +63,16 @@ ldoc = et.SubElement(doc, "g", transform=f"translate({430}, {0})", style="stroke
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
     node_height = (max(len(v.inputs), len(v.outputs)) * 15)
-    m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
-    t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
-    t.text = v.name
+    
+    bl_idname = nt.nodes.get(v.name).bl_idname
+    if bl_idname == "NodeReroute":
+        m = et.SubElement(g, "circle", r="10", cx=str(v.width/2), fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
+    else:
+        m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3])) #fill='rgb(74, 177, 231)')
+    
+    if not bl_idname == "NodeReroute":
+        t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
+        t.text = v.name
 
     sog = et.SubElement(g, "g", width="400", height="200")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
