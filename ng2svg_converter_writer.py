@@ -69,16 +69,17 @@ gdoc = et.SubElement(doc, "g", transform=f"translate({int(bw/2)}, {0})")
 ldoc = et.SubElement(doc, "g", transform=f"translate({int(bw/2)}, {0})", style="stroke-width: 3.0;")
 
 for k, v in nt_dict.items():
+    node = nt.nodes.get(v.name) 
+    bl_idname = node.bl_idname
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
-    node_height = (max(len(v.inputs), len(v.outputs)) * 15)
     
-    bl_idname = nt.nodes.get(v.name).bl_idname
     if bl_idname == "NodeReroute":
         m = et.SubElement(g, "circle", r="10", cx=str(v.width/2), fill=convert_rgb(v.color[:3]))
     elif bl_idname == "NodeFrame":
-        height = nt.nodes.get(v.name).height # dimensions[1]
+        height = node.height # dimensions[1]
         m = et.SubElement(g, "rect", width=str(v.width), y=str(-height), height=str(height), fill=convert_rgb(v.color[:3]), style="opacity: 0.3;")
     else:
+        node_height = (max(len(v.inputs), len(v.outputs)) * 15)
         m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3]))
     
     if not bl_idname == "NodeReroute":
