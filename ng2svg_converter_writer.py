@@ -25,22 +25,27 @@ class NodeProxy():
 
 nt = bpy.data.node_groups['NodeTree']
 nt_dict = {}
-bbox = [[None, None], [None, None]]
-def generate_bbox(x, y):
-    bbox[0][0] = x if not bbox[0][0] else min(bbox[0][0], x)
-    bbox[0][1] = x if not bbox[0][1] else max(bbox[0][1], x)
-    bbox[1][0] = y if not bbox[1][0] else min(bbox[1][0], y)
-    bbox[1][1] = y if not bbox[1][1] else max(bbox[1][1], y)
 
+bbox = [[None, None], [None, None]]
+def get_component(value, component, func):
+    return component if not value else func(value, component)
+
+def generate_bbox(x, y):
+    bbox[0][0] = get_component(bbox[0][0], x, min)
+    bbox[0][1] = get_component(bbox[0][1], x, max)
+    bbox[1][0] = get_component(bbox[1][0], y, min)
+    bbox[1][1] = get_component(bbox[1][1], y, max)
+
+def gather_socket_data(sockets):
+    return {s.name: (s.index, s.color) for s in sockets if not (s.hide or not s.enabled)}
+    
 for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
         outputs, inputs = {}, {}
-        color = [1.0, 0.91764, 0]
-        if n.bl_idname == "NodeFrame":
-            color = n.color 
+        color = n.color if n.bl_idname == "NodeFrame" else [1.0, 0.91764, 0]
     else:
-        inputs = {s.name: (s.index, s.color) for s in n.inputs if not (s.hide or not s.enabled)} 
-        outputs = {s.name: (s.index, s.color) for s in n.outputs if not (s.hide or not s.enabled)}
+        inputs = gather_socket_data(n.inputs)
+        outputs = gather_socket_data(n.outputs)
         color = n.color
     
     x, y = absloc(n, n.location[:])
@@ -59,8 +64,8 @@ for n, k in nt_dict.items():
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
-gdoc = et.SubElement(doc, "g", transform=f"translate({bw/2}, {0})")
-ldoc = et.SubElement(doc, "g", transform=f"translate({bw/2}, {0})", style="stroke-width: 3.0;")
+gdoc = et.SubElement(doc, "g", transform=f"translate({int(bw/2)}, {0})")
+ldoc = et.SubElement(doc, "g", transform=f"translate({int(bw/2)}, {0})", style="stroke-width: 3.0;")
 
 for k, v in nt_dict.items():
     g = et.SubElement(gdoc, "g", transform=f"translate{v.abs_location}")
@@ -71,7 +76,6 @@ for k, v in nt_dict.items():
         m = et.SubElement(g, "circle", r="10", cx=str(v.width/2), fill=convert_rgb(v.color[:3]))
     elif bl_idname == "NodeFrame":
         height = nt.nodes.get(v.name).height # dimensions[1]
-        #m = et.SubElement(g, "rect", x=str(int(v.width/2)), y=str(-height), width=str(v.width), height=str(height), fill=convert_rgb(v.color[:3]))
         m = et.SubElement(g, "rect", width=str(v.width), y=str(-height), height=str(height), fill=convert_rgb(v.color[:3]), style="opacity: 0.3;")
     else:
         m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3]))
