@@ -1,6 +1,5 @@
 import os
 import re
-import math
 import bpy
 import sverchok
 from sverchok.utils.sv_node_utils import recursive_framed_location_finder as absloc
@@ -12,6 +11,10 @@ from dataclasses import dataclass
 
 from lxml import etree as et   
 
+nt = bpy.data.node_groups['NodeTree']
+nt_dict = {}
+bbox = [[None, None], [None, None]]
+
 @dataclass
 class NodeProxy():
     name: str
@@ -22,11 +25,13 @@ class NodeProxy():
     inputs: dict
     outputs: dict
 
+def absloc_int(n, loc):
+    loc = absloc(n, loc)
+    return int(loc[0]), int(loc[1])
 
-nt = bpy.data.node_groups['NodeTree']
-nt_dict = {}
+def convert_rgb(a):
+    return f"rgb{tuple(int(i*255) for i in a)}"
 
-bbox = [[None, None], [None, None]]
 def get_component(value, component, func):
     return component if not value else func(value, component)
 
@@ -48,19 +53,15 @@ for n in nt.nodes:
         outputs = gather_socket_data(n.outputs)
         color = n.color
     
-    x, y = absloc(n, n.location[:])
+    x, y = absloc_int(n, n.location[:])
     generate_bbox(x, y)
-    nt_dict[n.name] = NodeProxy(n.name, n.label, (int(x), int(y)), n.width, color, inputs, outputs)
+    nt_dict[n.name] = NodeProxy(n.name, n.label, (x, y), n.width, color, inputs, outputs)
 
 bw = abs(bbox[0][1] - bbox[0][0])
 bh = abs(bbox[1][1] - bbox[1][0])
-print(bw, bh)
-
-def convert_rgb(a):
-    return f"rgb{tuple(int(i*255) for i in a)}"
 
 for n, k in nt_dict.items():
-    k.abs_location = int(k.abs_location[0]), int(bh - k.abs_location[1])
+    k.abs_location = k.abs_location[0], bh - k.abs_location[1]
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
@@ -121,8 +122,8 @@ for link in nt.links:
     y2_offset = calculate_offset(n2, s2, n2.inputs)
 
     xdist = min((x2 - x1), 40)
-    ctrl_1 = int(x1) + n1.width + xdist,              int(y1) + y1_offset
-    knot_1 = int(x1) + n1.width + socket_distance,    int(y1) + y1_offset
+    ctrl_1 = int(x1 + n1.width + xdist),              int(y1) + y1_offset
+    knot_1 = int(x1 + n1.width + socket_distance),    int(y1) + y1_offset
     knot_2 = int(x2) - socket_distance,               int(y2) + y2_offset
     ctrl_2 = int(x2) - xdist,                         int(y2) + y2_offset
 
