@@ -45,7 +45,7 @@ class FrameBBox():
 
     def add(self, loc, w, h):
         x, y = loc
-        prin(f"{loc, w, h}")
+        #prin(f"{loc, w, h}")
         self.xmin = get_component(self.xmin, x, min)
         self.xmax = get_component(self.xmax, x + w, max)
         self.ymin = get_component(self.ymin, y, min)
@@ -140,7 +140,7 @@ for k, v in nt_dict.items():
     dimensions = dict(x=str(_x), y=str(_y), width=str(_w), height=str(_h))
     m = et.SubElement(fdoc, "rect", fill=convert_rgb(v.color[:3]), id=f"FRAME:{v.name}", style="opacity: 0.3;", **dimensions)
 
-prin("------")
+# prin("------")
 
 calculated_offsets = {}
 def calculate_offset(node, socket, sockets=None):
