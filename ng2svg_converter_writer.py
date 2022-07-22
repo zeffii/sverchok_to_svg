@@ -91,10 +91,11 @@ for n, k in nt_dict.items():
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
-fdoc = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="frames", style="stroke-width: 1.0;")
-gdoc = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="node ui")
-ldoc = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="link noodles", style="stroke-width: 3.0;")
-xdoc = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="origin", style="stroke-width: 1.0;")
+tree = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="tree")
+fdoc = et.SubElement(tree, "g", id="frames", style="stroke-width: 1.0;")
+gdoc = et.SubElement(tree, "g", id="node ui")
+xdoc = et.SubElement(tree, "g", id="origin", style="stroke-width: 1.0;")
+ldoc = et.SubElement(tree, "g", id="link noodles", style="stroke-width: 3.0;")
 origin = et.SubElement(xdoc, "path", d=f"M-20,0 L20,0 M0,-20 L0,20", stroke="#333")
 
 # Step 1: draw Nodes, Names and Sockets
@@ -151,7 +152,7 @@ def calculate_offset(node, socket, sockets=None):
     if socket in calculated_offsets:
         return calculated_offsets[socket]
 
-    vis_idx = 0
+        vis_idx = 0
     for idx, s in enumerate(sockets):
         if s.hide or not s.enabled:
             continue
