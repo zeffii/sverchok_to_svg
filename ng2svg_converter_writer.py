@@ -175,8 +175,11 @@ for link in nt.links:
     knot_2 = int(x2) - socket_distance,               int(y2) + y2_offset
     ctrl_2 = int(x2) - xdist,                         int(y2) + y2_offset
 
+    dstroke = "#333"
     dpath = re.sub("\(|\)", "", f"M{knot_1} C{ctrl_1} {ctrl_2} {knot_2}")
-    path = et.SubElement(ldoc, "path", d=dpath, stroke="#333", fill="transparent") 
+    if s1.bl_idname == s2.bl_idname:
+        dstroke = convert_rgb(s1.color[:3])
+    path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke, fill="transparent") 
 
 
 svg_filename = "wooooop"
