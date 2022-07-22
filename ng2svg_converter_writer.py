@@ -24,7 +24,8 @@ class NodeProxy():
     color: tuple
     inputs: dict
     outputs: dict
-
+    def x(self): return self.abs_location[0]
+    def y(self): return self.abs_location[1]
 
 def find_children(node):
     return [n.name for n in node.id_data.nodes if n.parent == node]
@@ -152,7 +153,7 @@ def calculate_offset(node, socket, sockets=None):
     if socket in calculated_offsets:
         return calculated_offsets[socket]
 
-        vis_idx = 0
+    vis_idx = 0
     for idx, s in enumerate(sockets):
         if s.hide or not s.enabled:
             continue
@@ -181,8 +182,9 @@ for link in nt.links:
 
     dstroke = "#333"
     dpath = re.sub("\(|\)", "", f"M{knot_1} C{ctrl_1} {ctrl_2} {knot_2}")
-    if s1.bl_idname == s2.bl_idname:
+    if (s1.bl_idname == s2.bl_idname): # or (s2.bl_idname == "NodeReroute"):
         dstroke = convert_rgb(s1.color[:3])
+        
     path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke, fill="transparent") 
 
 
