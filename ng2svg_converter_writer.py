@@ -112,13 +112,16 @@ for k, v in nt_dict.items():
     else:
         node_height = (max(len(v.inputs), len(v.outputs)) * 15)
         node_heights[node.name] = node_height
-        m = et.SubElement(g, "rect", width=str(v.width), height=f"{node_height-5}", fill=convert_rgb(v.color[:3]))
-        t = et.SubElement(g, "text", fill="#333", y="-2", x="3")
+        m = et.SubElement(g, "rect", width=str(v.width), y="-9", height=f"{node_height+1}", fill=convert_rgb(v.color[:3]))
+        t = et.SubElement(g, "text", fill="#333", y="-12", x="7", **{"font-size":"11"})
         t.text = v.name
     
     sog = et.SubElement(g, "g", width="400", height="200")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
         et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{idx*15}", x="7", **{"font-size":"10"})
+        t.text = socket_name
+
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
         et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")    
 
