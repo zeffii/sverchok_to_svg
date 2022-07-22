@@ -137,8 +137,8 @@ for k, v in nt_dict.items():
         _x, _y, _w, _h = box.get_box(padding=20)
     else:
         (_x, _y), _w, _h = v.abs_location, node.width, node.height
-    dimensions = dict(x=str(_x), y=str(_y), width=str(_w), height=str(_h))
-    m = et.SubElement(fdoc, "rect", fill=convert_rgb(v.color[:3]), id=f"FRAME:{v.name}", style="opacity: 0.3;", **dimensions)
+    params = dict(x=str(_x), y=str(_y), width=str(_w), height=str(_h)) | {"id": v.name, "class": "FRAME"}
+    m = et.SubElement(fdoc, "rect", fill=convert_rgb(v.color[:3]), style="opacity: 0.3;", **params)
 
 # prin("------")
 
