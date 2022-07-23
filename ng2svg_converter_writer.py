@@ -108,9 +108,9 @@ doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns=
 
 sockets = sverchok.core.sockets
 css_stylesheet = f"""
-circle.socket {{
-    stroke: #bbb;
-}}
+
+circle.socket {{ stroke: #bbb; }}
+text.socket {{ fill: #fff; stroke: none}}
 
 """
 bassclass = sockets.SvSocketCommon
@@ -155,12 +155,12 @@ for k, v in nt_dict.items():
     sog = et.SubElement(g, "g", width="400", height="200", style="font-size: 10; font-weight: normal;")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
         et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket input {socket[2]}"}) 
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"class": "socket name"})
+        t = et.SubElement(sog, "text", y=f"{(idx*15)+3}", x="7", **{"class": "socket name"})
         t.text = socket_name
 
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
         et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket output {socket[2]}"})    
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "class": "socket name"})
+        t = et.SubElement(sog, "text", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "class": "socket name"})
         t.text = socket_name
 
 # Step 2: draw nodeframes on lower layer, using node dimensions generated in step 1
