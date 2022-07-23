@@ -92,8 +92,7 @@ for n in nt.nodes:
         color = n.color
     
     x, y = absloc_int(n, n.location[:])
-    # not sure wtf is going on with frame nodes but there seems to be an offset incorrectly applied.
-    # so for the timebeing, i'm dropping them from the main-frame-bounding-box
+    # disregard blender's Frame data, it seems useless.
     if not n.bl_idname == "NodeFrame":
         generate_bbox(x, y)
     nt_dict[n.name] = NodeProxy(n.name, n.label, (x, y), n.width, color, inputs, outputs)
@@ -102,7 +101,6 @@ bw = abs(bbox[0][1] - bbox[0][0])
 bh = abs(bbox[1][1] - bbox[1][0])
 
 for n, k in nt_dict.items():
-    # k.abs_location = k.abs_location[0] - bbox[0][0], bh - (k.abs_location[1] - bbox[1][0])
     k.abs_location = k.x - bbox[0][0], bh - (k.y - bbox[1][0])
 
 
@@ -110,13 +108,13 @@ doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns=
 
 sockets = sverchok.core.sockets
 css_stylesheet = f"""
-.socket {{
+circle.socket {{
     stroke: #bbb;
 }}
 
 """
-bassclass = sverchok.core.sockets.SvSocketCommon
-for element in sverchok.core.sockets.classes:
+bassclass = sockets.SvSocketCommon
+for element in sockets.classes:
     if inspect.isclass(element) and issubclass(element, bassclass):
         colorline = convert_rgb(element.color[:3])
         astr = f".{element.bl_idname} {{ fill: {colorline}; }}\n"
@@ -154,15 +152,15 @@ for k, v in nt_dict.items():
         t = et.SubElement(g, "text", fill="#333", y="-12", x="7", **{"font-size":"11"})
         t.text = v.name
     
-    sog = et.SubElement(g, "g", width="400", height="200")
+    sog = et.SubElement(g, "g", width="400", height="200", style="font-size: 10; font-weight: normal;")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
         et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket input {socket[2]}"}) 
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"font-size":"10"})
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"class": "socket name"})
         t.text = socket_name
 
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
         et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket output {socket[2]}"})    
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "font-size":"10"})
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "class": "socket name"})
         t.text = socket_name
 
 # Step 2: draw nodeframes on lower layer, using node dimensions generated in step 1
