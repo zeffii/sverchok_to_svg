@@ -106,6 +106,17 @@ for n, k in nt_dict.items():
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
+
+css_stylesheet = """
+.socket#verts {
+    stroke: #222;
+}
+
+"""
+
+style_sheet = et.SubElement(doc, "style")
+style_sheet.text = css_stylesheet
+ 
 tree = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="tree")
 fdoc = et.SubElement(tree, "g", id="frames", style="stroke-width: 1.0;")
 gdoc = et.SubElement(tree, "g", id="node ui")
