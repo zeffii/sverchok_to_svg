@@ -1,6 +1,7 @@
 import os
 import re
 import bpy
+import inspect
 import sverchok
 import numpy as np
 from mathutils.geometry import interpolate_bezier as bezlerp
@@ -79,7 +80,7 @@ def generate_bbox(x, y):
     bbox[1][1] = get_component(bbox[1][1], y, max)
 
 def gather_socket_data(sockets):
-    return {s.name: (s.index, s.color) for s in sockets if not (s.hide or not s.enabled)}
+    return {s.name: (s.index, s.color, s.bl_idname) for s in sockets if not (s.hide or not s.enabled)}
     
 for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
@@ -107,12 +108,20 @@ for n, k in nt_dict.items():
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
 
-css_stylesheet = """
-.socket {
+sockets = sverchok.core.sockets
+css_stylesheet = f"""
+.socket {{
     stroke: #bbb;
-}
+}}
 
 """
+bassclass = sverchok.core.sockets.SvSocketCommon
+for element in sverchok.core.sockets.classes:
+    if inspect.isclass(element) and issubclass(element, bassclass):
+        colorline = convert_rgb(element.color[:3])
+        astr = f".{element.bl_idname} {{ fill: {colorline}; }}\n"
+        css_stylesheet += astr
+css_stylesheet += "\n"
 
 style_sheet = et.SubElement(doc, "style")
 style_sheet.text = css_stylesheet
@@ -121,10 +130,12 @@ tree = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="tree")
 fdoc = et.SubElement(tree, "g", id="frames", style="stroke-width: 1.0;")
 gdoc = et.SubElement(tree, "g", id="node ui")
 xdoc = et.SubElement(tree, "g", id="origin", style="stroke-width: 1.0;")
-ldoc = et.SubElement(tree, "g", id="link noodles", style="stroke-width: 3.0;")
+ldoc = et.SubElement(tree, "g", id="link noodles", fill="transparent", style="stroke-width: 3.0;")
 origin = et.SubElement(xdoc, "path", d=f"M-20,0 L20,0 M0,-20 L0,20", stroke="#333")
 
 # Step 1: draw Nodes, Names and Sockets
+def add_class(d, class_name): return {"class": f"{d['class']} {class_name}"}
+ 
 node_heights = {}
 for k, v in nt_dict.items():
     node = nt.nodes.get(v.name) 
@@ -144,14 +155,13 @@ for k, v in nt_dict.items():
         t.text = v.name
     
     sog = et.SubElement(g, "g", width="400", height="200")
-    style_props = {"class": "socket"}
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
-        et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index {idx}", **style_props)
+        et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket input {socket[2]}"}) 
         t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"font-size":"10"})
         t.text = socket_name
 
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
-        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index {idx}", **style_props)    
+        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", id=f"{idx}", **{"class": f"socket output {socket[2]}"})    
         t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "font-size":"10"})
         t.text = socket_name
 
@@ -221,7 +231,7 @@ for link in nt.links:
             mode = "take from destination"
 
     if mode == "take from destination":
-        path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke, fill="transparent") 
+        path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke) 
     else:
         # draw the bezier manually using 15 segments and transition their color
         arc_verts = bezlerp(knot_1, ctrl_1, ctrl_2, knot_2, 15)
@@ -232,7 +242,7 @@ for link in nt.links:
             start_color = s1.color[:]    
             
         gradient = clerp(start_color, s2.color[:], len(arc_verts)-1)
-        bezier = et.SubElement(ldoc, "g", fill="transparent", **{"class": "gradient_bezier"})
+        bezier = et.SubElement(ldoc, "g", **{"class": "gradient_bezier"})
         for idx in range(len(arc_verts)-1):
             idx2 = idx+1
             v1, v2 = arc_verts[idx], arc_verts[idx2]
