@@ -108,8 +108,8 @@ for n, k in nt_dict.items():
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
 
 css_stylesheet = """
-.socket#verts {
-    stroke: #222;
+.socket {
+    stroke: #bbb;
 }
 
 """
@@ -139,19 +139,20 @@ for k, v in nt_dict.items():
     else:
         node_height = (max(len(v.inputs), len(v.outputs)) * 15)
         node_heights[node.name] = node_height
-        m = et.SubElement(g, "rect", width=str(v.width), y="-9", height=f"{node_height+1}", fill=convert_rgb(v.color[:3]))
+        m = et.SubElement(g, "rect", width=str(v.width), y="-9", height=f"{node_height+3}", fill=convert_rgb(v.color[:3]))
         t = et.SubElement(g, "text", fill="#333", y="-12", x="7", **{"font-size":"11"})
         t.text = v.name
     
     sog = et.SubElement(g, "g", width="400", height="200")
+    style_props = {"class": "socket"}
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
-        et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")
+        et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index {idx}", **style_props)
         t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"font-size":"10"})
         t.text = socket_name
 
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
-        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")    
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-6), **{"text-anchor": "end", "font-size":"10"})
+        et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index {idx}", **style_props)    
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-7), **{"text-anchor": "end", "font-size":"10"})
         t.text = socket_name
 
 # Step 2: draw nodeframes on lower layer, using node dimensions generated in step 1
