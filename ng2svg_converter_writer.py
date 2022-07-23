@@ -2,6 +2,8 @@ import os
 import re
 import bpy
 import sverchok
+import numpy as np
+from mathutils.geometry import interpolate_bezier as bezlerp
 from sverchok.utils.sv_node_utils import recursive_framed_location_finder as absloc
 from dataclasses import dataclass
 
@@ -24,7 +26,9 @@ class NodeProxy():
     color: tuple
     inputs: dict
     outputs: dict
+    @property
     def x(self): return self.abs_location[0]
+    @property
     def y(self): return self.abs_location[1]
 
 def find_children(node):
@@ -39,6 +43,15 @@ def convert_rgb(a):
 
 def get_component(value, component, func):
     return component if not value else func(value, component)
+
+def as_ints(v):
+    return (int(v[0]), int(v[1]))
+
+def clerp(A, B, num):
+    def tween(A, B, by):
+        return A[0]*(1-by)+B[0]*by, A[1]*(1-by)+B[1]*by, A[2]*(1-by)+B[2]*by
+    floats = np.linspace(0.0, 1.0, num).tolist()
+    return [tween(A, B, by) for by in floats]
 
 class FrameBBox():
     def __init__(self):
@@ -88,7 +101,8 @@ bw = abs(bbox[0][1] - bbox[0][0])
 bh = abs(bbox[1][1] - bbox[1][0])
 
 for n, k in nt_dict.items():
-    k.abs_location = k.abs_location[0] - bbox[0][0], bh - (k.abs_location[1] - bbox[1][0])
+    # k.abs_location = k.abs_location[0] - bbox[0][0], bh - (k.abs_location[1] - bbox[1][0])
+    k.abs_location = k.x - bbox[0][0], bh - (k.y - bbox[1][0])
 
 
 doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns='http://www.w3.org/2000/svg')
@@ -121,11 +135,13 @@ for k, v in nt_dict.items():
     sog = et.SubElement(g, "g", width="400", height="200")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
         et.SubElement(sog, "circle", r="5", cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")
-        t = et.SubElement(sog, "text", fill="#fff", y=f"{idx*15}", x="7", **{"font-size":"10"})
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x="7", **{"font-size":"10"})
         t.text = socket_name
 
     for idx, (socket_name, socket) in enumerate(v.outputs.items()):
         et.SubElement(sog, "circle", r="5", cx=str(v.width), cy=f"{idx*15}", fill=convert_rgb(socket[1][:3]), id=f"index_{idx}")    
+        t = et.SubElement(sog, "text", fill="#fff", y=f"{(idx*15)+3}", x=str(v.width-6), **{"text-anchor": "end", "font-size":"10"})
+        t.text = socket_name
 
 # Step 2: draw nodeframes on lower layer, using node dimensions generated in step 1
 for k, v in nt_dict.items():
@@ -141,8 +157,8 @@ for k, v in nt_dict.items():
             box.add(child_node.abs_location, child_node.width, node_heights[name])
         _x, _y, _w, _h = box.get_box(padding=20)
     else:
-        (_x, _y), _w, _h = v.abs_location, node.width, node.height
-    params = dict(x=str(_x), y=str(_y), width=str(_w), height=str(_h)) | {"id": v.name, "class": "FRAME"}
+        _x, _y, _w, _h = v.x, v.y, node.width, node.height
+    params = dict(x=str(_x), y=str(_y-8), width=str(_w), height=str(_h)) | {"id": v.name, "class": "FRAME"}
     m = et.SubElement(fdoc, "rect", fill=convert_rgb(v.color[:3]), style="opacity: 0.3;", **params)
 
 # prin("------")
@@ -182,11 +198,36 @@ for link in nt.links:
 
     dstroke = "#333"
     dpath = re.sub("\(|\)", "", f"M{knot_1} C{ctrl_1} {ctrl_2} {knot_2}")
-    if (s1.bl_idname == s2.bl_idname): # or (s2.bl_idname == "NodeReroute"):
+    
+    mode = "transition"
+    if (s1.bl_idname == s2.bl_idname) or (n2.bl_idname == "NodeReroute"):
         dstroke = convert_rgb(s1.color[:3])
-        
-    path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke, fill="transparent") 
+        mode = "take from destination"
+    elif n1.bl_idname == "NodeReroute":
+        if n1.inputs[0].is_linked:
+            dstroke = convert_rgb(s2.color[:3])
+            mode = "take from destination"
 
+    if mode == "take from destination":
+        path = et.SubElement(ldoc, "path", d=dpath, stroke=dstroke, fill="transparent") 
+    else:
+        # draw the bezier manually using 15 segments and transition their color
+        arc_verts = bezlerp(knot_1, ctrl_1, ctrl_2, knot_2, 15)
+        
+        if not n1.inputs[0].is_linked:
+            start_color = [1.0, 0.91764, 0]
+        else:
+            start_color = s1.color[:]    
+            
+        gradient = clerp(start_color, s2.color[:], len(arc_verts)-1)
+        bezier = et.SubElement(ldoc, "g", fill="transparent", **{"class": "gradient_bezier"})
+        for idx in range(len(arc_verts)-1):
+            idx2 = idx+1
+            v1, v2 = arc_verts[idx], arc_verts[idx2]
+            v1, v2 = as_ints(v1), as_ints(v2)
+            dpath = re.sub("\(|\)", "", f"M{v1[:]} L{v2[:]}")
+            stroke_color = convert_rgb(gradient[idx])
+            et.SubElement(bezier, "path", d=dpath, stroke=stroke_color) 
 
 svg_filename = "wooooop"
 svg_path = os.path.join(bpy.path.abspath('//'), svg_filename + '.svg')
