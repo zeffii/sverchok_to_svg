@@ -109,6 +109,7 @@ doc = et.Element('svg', width=str(bw*2), height=str(bh*2), version='1.1', xmlns=
 sockets = sverchok.core.sockets
 css_stylesheet = f"""
 
+svg {{ background-color: #555; }}
 circle.socket {{ stroke: #bbb; }}
 text.socket {{ fill: #fff; stroke: none}}
 
