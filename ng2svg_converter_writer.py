@@ -2,6 +2,7 @@ import os
 import re
 import bpy
 import inspect
+import textwrap
 import sverchok
 import numpy as np
 from mathutils.geometry import interpolate_bezier as bezlerp
@@ -31,6 +32,27 @@ class NodeProxy():
     def x(self): return self.abs_location[0]
     @property
     def y(self): return self.abs_location[1]
+    @property
+    def draw_buttons(self):
+        draw_func = str(inspect.getsource(nt.nodes[self.name].draw_buttons))
+        if draw_func and len(draw_func.split("\n")) < 7:
+            return textwrap.dedent(draw_func)
+
+def Layout():
+    """ small uilayout wrapper """
+    def __init__(self, w, h):
+        self.current_w = w
+        self.current_h = h
+        self.current_row = 0
+        self.current_col = 0
+    def row(self, *args, **kwargs):
+        ... # return ..    
+    def column(self, *args, **kwargs):
+        ... # return ..
+    def prop(self, *args, **kwargs):
+        ...
+    def ops(self, *args, **kwargs):
+        ...
 
 def find_children(node):
     return [n.name for n in node.id_data.nodes if n.parent == node]
@@ -49,10 +71,10 @@ def as_ints(v):
     return (int(v[0]), int(v[1]))
 
 def clerp(A, B, num):
-    def tween(A, B, by):
-        return A[0]*(1-by)+B[0]*by, A[1]*(1-by)+B[1]*by, A[2]*(1-by)+B[2]*by
-    floats = np.linspace(0.0, 1.0, num).tolist()
-    return [tween(A, B, by) for by in floats]
+    p1 = np.array(A[:3])
+    p2 = np.array(B[:3])
+    l1 = np.linspace(0,1,num)
+    return p1+(p2-p1)*l1[:,None]
 
 class FrameBBox():
     def __init__(self):
@@ -60,7 +82,6 @@ class FrameBBox():
 
     def add(self, loc, w, h):
         x, y = loc
-        #prin(f"{loc, w, h}")
         self.xmin = get_component(self.xmin, x, min)
         self.xmax = get_component(self.xmax, x + w, max)
         self.ymin = get_component(self.ymin, y, min)
@@ -85,8 +106,14 @@ def gather_socket_data(sockets):
 for n in nt.nodes:
     if n.bl_idname in {'NodeReroute', 'NodeFrame'}:
         outputs, inputs = {}, {}
-        color = n.color if n.bl_idname == "NodeFrame" else [1.0, 0.91764, 0]
+        if n.bl_idname == "NodeFrame":
+            color = n.color 
+        else:
+            # find from links the one that ends in this reroute, it can be only one.
+            #color = [l for l in nt.links if l.to_node == n][0][0].from_linknode, 
+            color = [1.0, 0.91764, 0]
     else:
+        
         inputs = gather_socket_data(n.inputs)
         outputs = gather_socket_data(n.outputs)
         color = n.color
@@ -110,8 +137,13 @@ sockets = sverchok.core.sockets
 css_stylesheet = f"""
 
 svg {{ background-color: #555; }}
-circle.socket {{ stroke: #bbb; }}
-text.socket {{ fill: #fff; stroke: none}}
+circle.socket {{ stroke: none; }}
+text.socket {{ fill: #fff; stroke: none;}}
+text.multiline {{ 
+    font-size: 12px;
+    font-family: monospace; 
+    fill: #7ef;
+}}
 
 """
 bassclass = sockets.SvSocketCommon
@@ -152,6 +184,18 @@ for k, v in nt_dict.items():
         m = et.SubElement(g, "rect", width=str(v.width), y="-9", height=f"{node_height+3}", fill=convert_rgb(v.color[:3]))
         t = et.SubElement(g, "text", fill="#333", y="-12", x="7", **{"font-size":"11"})
         t.text = v.name
+
+        if v.draw_buttons:
+            draw_func = et.SubElement(g, "g", transform=f"translate({-8*4}, 0)") 
+            t2 = et.SubElement(draw_func, "text", x="0", y=f"{node_height+6}", **{"class": "multiline draw_buttons"})
+
+            for line in v.draw_buttons.split("\n"):
+                if not line.strip():
+                    continue
+                indents = len(line) - len(line.lstrip(' '))
+                char_width = 8
+                line_x = f"{(indents * char_width)}"
+                et.SubElement(t2, "tspan", dy="15", x=line_x).text = line
     
     sog = et.SubElement(g, "g", width="400", height="200", style="font-size: 10; font-weight: normal;")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
@@ -182,7 +226,6 @@ for k, v in nt_dict.items():
     params = dict(x=str(_x), y=str(_y-8), width=str(_w), height=str(_h)) | {"id": v.name, "class": "FRAME"}
     m = et.SubElement(fdoc, "rect", fill=convert_rgb(v.color[:3]), style="opacity: 0.3;", **params)
 
-# prin("------")
 
 calculated_offsets = {}
 def calculate_offset(node, socket, sockets=None):
@@ -253,5 +296,5 @@ for link in nt.links:
 svg_filename = "wooooop"
 svg_path = os.path.join(bpy.path.abspath('//'), svg_filename + '.svg')
 with open(svg_path, 'w') as f:
-    f.write(f"<!--{bbox}-->\n")
+    f.write(f"<!--v 0.1 {bbox}-->\n")
     f.write(et.tostring(doc, pretty_print=True).decode())
