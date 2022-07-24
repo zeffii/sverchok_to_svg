@@ -164,9 +164,9 @@ style_sheet.text = css_stylesheet
  
 tree = et.SubElement(doc, "g", transform=f"translate({30}, {30})", id="tree")
 fdoc = et.SubElement(tree, "g", id="frames", style="stroke-width: 1.0;")
-gdoc = et.SubElement(tree, "g", id="node ui")
+gdoc = et.SubElement(tree, "g", id="node_ui")
 xdoc = et.SubElement(tree, "g", id="origin", style="stroke-width: 1.0;")
-ldoc = et.SubElement(tree, "g", id="link noodles", fill="transparent", style="stroke-width: 3.0;")
+ldoc = et.SubElement(tree, "g", id="link_noodles", fill="transparent", style="stroke-width: 3.0;")
 origin = et.SubElement(xdoc, "path", d=f"M-20,0 L20,0 M0,-20 L0,20", stroke="#333")
 
 # Step 1: draw Nodes, Names and Sockets
