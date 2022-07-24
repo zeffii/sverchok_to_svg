@@ -38,19 +38,24 @@ class NodeProxy():
         if draw_func and len(draw_func.split("\n")) < 7:
             return textwrap.dedent(draw_func)
 
-def Layout():
+class Layout():
     """ small uilayout wrapper """
     def __init__(self, w, h):
         self.current_w = w
         self.current_h = h
         self.current_row = 0
         self.current_col = 0
+
     def row(self, *args, **kwargs):
-        ... # return ..    
+        self.current_row += 1
+        return self    
+
     def column(self, *args, **kwargs):
-        ... # return ..
+        return self
+
     def prop(self, *args, **kwargs):
         ...
+
     def ops(self, *args, **kwargs):
         ...
 
@@ -196,6 +201,13 @@ for k, v in nt_dict.items():
                 char_width = 8
                 line_x = f"{(indents * char_width)}"
                 et.SubElement(t2, "tspan", dy="15", x=line_x).text = line
+            
+            layout = Layout(400, 20)
+            try:
+                node.draw_buttons(bpy.context, layout)
+                prin(layout.current_row)
+            except Exception as err:
+                prin(err)
     
     sog = et.SubElement(g, "g", width="400", height="200", style="font-size: 10; font-weight: normal;")
     for idx, (socket_name, socket) in enumerate(v.inputs.items()):
