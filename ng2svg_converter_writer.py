@@ -55,8 +55,9 @@ class Layout():
         return self.ui_element, self.current_w, self.current_h, self.current_row, self.current_col
 
     def row(self, *args, **kwargs):
+        layout = Layout(*self.sv_layout_props(), "row")    
         self.current_row += 1
-        return Layout(*self.sv_layout_props(), "row")    
+        return layout
 
     def column(self, *args, **kwargs):
         return Layout(*self.sv_layout_props(), "column")
@@ -65,7 +66,8 @@ class Layout():
         # prin(args)
         if self.current_state == "row":
             xpos = node_heights[node.name] + 5
-            t = et.SubElement(self.ui_element, "text", y=f"{xpos + (self.current_row * 15)}", x="7") #, **{"class": "socket name"})
+            bg = et.SubElement(self.ui_element, "rect", y=f"{xpos + (self.current_row * 15) - 11}", x="7", height=f"{14}", width=f"{node.width}", fill="#eee") 
+            t = et.SubElement(self.ui_element, "text", y=f"{xpos + (self.current_row * 15) + 1}", x="7") #, **{"class": "socket name"})
             t.text = f"{getattr(args[0], args[1])}"
             self.current_row += 1
         elif self.current_state == "column":
