@@ -15,6 +15,9 @@ from dataclasses import dataclass
 
 from lxml import etree as et   
 
+prin("------")
+
+node_heights = {}
 nt = bpy.data.node_groups['NodeTree']
 nt_dict = {}
 bbox = [[None, None], [None, None]]
@@ -40,24 +43,36 @@ class NodeProxy():
 
 class Layout():
     """ small uilayout wrapper """
-    def __init__(self, w, h):
+    def __init__(self, ui_element, w, h, r=0, c=0, state="row"):
+        self.ui_element = ui_element
         self.current_w = w
         self.current_h = h
-        self.current_row = 0
-        self.current_col = 0
+        self.current_row = r
+        self.current_col = c
+        self.current_state = state
+
+    def sv_layout_props(self):
+        return self.ui_element, self.current_w, self.current_h, self.current_row, self.current_col
 
     def row(self, *args, **kwargs):
         self.current_row += 1
-        return self    
+        return Layout(*self.sv_layout_props(), "row")    
 
     def column(self, *args, **kwargs):
-        return self
+        return Layout(*self.sv_layout_props(), "column")
 
     def prop(self, *args, **kwargs):
-        ...
+        # prin(args)
+        if self.current_state == "row":
+            xpos = node_heights[node.name] + 5
+            t = et.SubElement(self.ui_element, "text", y=f"{xpos + (self.current_row * 15)}", x="7") #, **{"class": "socket name"})
+            t.text = f"{getattr(args[0], args[1])}"
+            self.current_row += 1
+        elif self.current_state == "column":
+            self.current_column += 1
 
     def ops(self, *args, **kwargs):
-        ...
+        return lambda: None
 
 def find_children(node):
     return [n.name for n in node.id_data.nodes if n.parent == node]
@@ -172,7 +187,6 @@ origin = et.SubElement(xdoc, "path", d=f"M-20,0 L20,0 M0,-20 L0,20", stroke="#33
 # Step 1: draw Nodes, Names and Sockets
 def add_class(d, class_name): return {"class": f"{d['class']} {class_name}"}
  
-node_heights = {}
 for k, v in nt_dict.items():
     node = nt.nodes.get(v.name) 
     bl_idname = node.bl_idname
@@ -191,7 +205,8 @@ for k, v in nt_dict.items():
         t.text = v.name
 
         if v.draw_buttons:
-            draw_func = et.SubElement(g, "g", transform=f"translate({-8*4}, 0)") 
+            draw_func = et.SubElement(g, "g", transform=f"translate({-8*4}, 40)") #, style="fill-opacity: 0;")
+            ui_element = et.SubElement(g, "g", transform=f"translate({0}, 0)") #, style="fill-opacity: 0;") 
             t2 = et.SubElement(draw_func, "text", x="0", y=f"{node_height+6}", **{"class": "multiline draw_buttons"})
 
             for line in v.draw_buttons.split("\n"):
@@ -202,10 +217,9 @@ for k, v in nt_dict.items():
                 line_x = f"{(indents * char_width)}"
                 et.SubElement(t2, "tspan", dy="15", x=line_x).text = line
             
-            layout = Layout(400, 20)
+            layout = Layout(ui_element, 400, 20)
             try:
                 node.draw_buttons(bpy.context, layout)
-                prin(layout.current_row)
             except Exception as err:
                 prin(err)
     
