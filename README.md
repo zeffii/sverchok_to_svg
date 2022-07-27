@@ -9,6 +9,7 @@ nothing is certain, maybe.
 import sverchok_to_svg
 sverchok_to_svg.create("NodeTree", "some_svg_name")  # extension is added automatically
 ```
+the file will be created in the same directory as the .blend file containing the current nodetree.
 
 ## license
 
