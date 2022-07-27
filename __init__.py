@@ -11,7 +11,14 @@ bl_info = {
     "tracker_url": "https://github.com/zeffii/sverchok_to_svg/issues"
 }
 
-from ng2svg_convert_writer import create
+from .ng2svg_converter_writer import create
+
+"""
+usage:
+
+import sverchok_to_svg
+sverchok_to_svg.create("NodeTree", "wollops4")
+"""
 
 def register(): pass
 def unregister(): pass
