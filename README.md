@@ -23,6 +23,20 @@ nothing is certain, maybe.
    ```
 3. the file will be created in the same directory as the .blend file containing the current nodetree.
 
+## interesting features of the code
+
+this is a liteweight introduction to the following python modules
+
+```console
+- lxml      : for creating svg elements, stylesheet. A remarkable library.
+- inspect   : for getting code-text of modules at runtime, this helps getting the code for the node draw_buttons
+- dataclass : a convenient way to declare a class
+- re        : (regex) for rewriting a string destined for svg path
+- importlib : in blender while developing you want to be able to edit the python code and quickly see how it behaves
+- numpy     : a little bit of linear algebra for gradients between two colors.
+
+```
+
 ## license
 
 no thanks
