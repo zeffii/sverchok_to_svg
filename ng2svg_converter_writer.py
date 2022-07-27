@@ -12,10 +12,10 @@ from dataclasses import dataclass
 # for prettyprint xml there is only one sane solution:
 # from sverchok.utils.pip_utils import install_package
 # install_package("lxml")
+from lxml import etree as et   
+
 if 'prin' not in locals():
     prin = print
-
-from lxml import etree as et   
 
 def create(NodeTreeName, SVGName):
     prin("------")
