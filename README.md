@@ -5,6 +5,8 @@ nothing is certain, maybe.
 
 ## usage
 
+enable the addon just like any other addon.
+
 ```python
 import sverchok_to_svg
 sverchok_to_svg.create("NodeTree", "some_svg_name")  # extension is added automatically
