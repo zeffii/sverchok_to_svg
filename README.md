@@ -3,6 +3,15 @@
 An exploration into the extent I can find the patience to interpret nodetree+drawbuttons of Blender Sverchok into an svg. 
 nothing is certain, maybe.
 
+## requirements
+
+   ```console
+   mathutils ( blender )
+   numpy
+   sverchok
+   lxml
+   ```
+
 ## usage
 
 1. enable the addon just like any other addon.
