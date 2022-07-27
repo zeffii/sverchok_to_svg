@@ -11,17 +11,13 @@ bl_info = {
     "tracker_url": "https://github.com/zeffii/sverchok_to_svg/issues"
 }
 
-print("new!")
+
 import importlib
 
 if 'ng2svg_converter_writer' not in locals():
-    #from 
     importlib.import_module('.ng2svg_converter_writer')
 else:
     importlib.reload(ng2svg_converter_writer)
-    #rom ng2svg_converter_writer import create
-    #print("reloaded!")
-    pass
 
 create = ng2svg_converter_writer.create
 
