@@ -17,9 +17,21 @@ nothing is certain, maybe.
 1. enable the addon just like any other addon.
 
 2. then in TextEditor or BPY console, execute:
+
    ```python
    import sverchok_to_svg
-   sverchok_to_svg.create("NodeTree", "some_svg_name")  # extension is added automatically
+
+   # this outputs the svg in the path of the current .blend ( .svg extension is added )
+   sverchok_to_svg.create("NodeTree", SVGName="wollops4")
+
+   # this lets you set the path exactly ( you must add .svg yourself)
+   sverchok_to_svg.create("NodeTree", SVGPath="some/full/path/name.svg")
+
+   # this outputs the lxml doc from the function, for further processing.
+   from lxml import etree as et
+   doc = sverchok_to_svg.create("NodeTree", AsDoc=True)
+   print(et.tostring(doc, pretty_print=True).decode())
+
    ```
 3. the file will be created in the same directory as the .blend file containing the current nodetree.
 

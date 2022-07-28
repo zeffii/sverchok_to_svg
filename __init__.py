@@ -33,6 +33,7 @@ sverchok_to_svg.create("NodeTree", SVGName="wollops4")
 sverchok_to_svg.create("NodeTree", SVGPath="some/full/path/name.svg")
 
 # this outputs the lxml doc from the function, for further processing.
+from lxml import etree as et
 doc = sverchok_to_svg.create("NodeTree", AsDoc=True)
 print(et.tostring(doc, pretty_print=True).decode())
 
