@@ -17,7 +17,7 @@ from lxml import etree as et
 if 'prin' not in locals():
     prin = print
 
-def create(NodeTreeName, SVGName):
+def create(NodeTreeName, SVGName=None, SVGPath=None, AsDoc=False):
     prin("------")
 
     node_heights = {}
@@ -324,8 +324,14 @@ def create(NodeTreeName, SVGName):
                 stroke_color = convert_rgb(gradient[idx])
                 et.SubElement(bezier, "path", d=dpath, stroke=stroke_color) 
 
-    svg_filename = SVGName
-    svg_path = os.path.join(bpy.path.abspath('//'), svg_filename + '.svg')
+    if SVGName:
+        svg_filename = SVGName
+        svg_path = os.path.join(bpy.path.abspath('//'), svg_filename + '.svg')
+    elif SVGPath:
+        svg_path = SVGPath
+    elif AsDoc:
+        return doc
+ 
     with open(svg_path, 'w') as f:
         f.write(f"<!--v 0.1 {bbox}-->\n")
         f.write(et.tostring(doc, pretty_print=True).decode())

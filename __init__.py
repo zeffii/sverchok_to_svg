@@ -25,7 +25,17 @@ create = ng2svg_converter_writer.create
 usage:
 
 import sverchok_to_svg
-sverchok_to_svg.create("NodeTree", "wollops4")
+
+# this outputs the svg in the path of the current .blend ( .svg extension is added )
+sverchok_to_svg.create("NodeTree", SVGName="wollops4")
+
+# this lets you set the path exactly ( you must add .svg yourself)
+sverchok_to_svg.create("NodeTree", SVGPath="some/full/path/name.svg")
+
+# this outputs the lxml doc from the function, for further processing.
+doc = sverchok_to_svg.create("NodeTree", AsDoc=True)
+print(et.tostring(doc, pretty_print=True).decode())
+
 """
 
 def register(): pass
