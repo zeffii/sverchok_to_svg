@@ -33,7 +33,6 @@ nothing is certain, maybe.
    print(et.tostring(doc, pretty_print=True).decode())
 
    ```
-3. the file will be created in the same directory as the .blend file containing the current nodetree.
 
 ## interesting features of the code
 
