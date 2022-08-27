@@ -15,6 +15,9 @@ bl_info = {
 import importlib
 
 if 'ng2svg_converter_writer' not in locals():
+    # previously i had just  `.ng2svg_converter_writer` in the import module on the next line.
+    # but for some reason i started getting an error
+    # TypeError: the 'package' argument is required to perform a relative import for ..
     importlib.import_module('sverchok_to_svg.ng2svg_converter_writer')
 else:
     importlib.reload(ng2svg_converter_writer)
