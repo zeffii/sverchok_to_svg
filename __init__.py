@@ -15,7 +15,7 @@ bl_info = {
 import importlib
 
 if 'ng2svg_converter_writer' not in locals():
-    importlib.import_module('.ng2svg_converter_writer')
+    importlib.import_module('sverchok_to_svg.ng2svg_converter_writer')
 else:
     importlib.reload(ng2svg_converter_writer)
 
