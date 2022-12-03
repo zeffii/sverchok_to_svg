@@ -21,7 +21,7 @@ def create(NodeTreeName, SVGName=None, SVGPath=None, AsDoc=False):
     prin("------")
 
     node_heights = {}
-    nt = bpy.data.node_groups['NodeTree']
+    nt = bpy.data.node_groups[NodeTreeName]
     nt_dict = {}
     bbox = [[None, None], [None, None]]
 
@@ -249,6 +249,7 @@ def create(NodeTreeName, SVGName=None, SVGPath=None, AsDoc=False):
         children = find_children(node)
         if children:
             for name in children:
+                if 'Frame' in name: continue
                 child_node = nt_dict[name] 
                 box.add(child_node.abs_location, child_node.width, node_heights[name])
             _x, _y, _w, _h = box.get_box(padding=20)
