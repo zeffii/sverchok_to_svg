@@ -11,6 +11,7 @@ nothing is certain, maybe.
    sverchok
    lxml
    ```
+Also addon folder has to have name ```sverchok_to_svg```, not ```sverchok_to_svg_master```
 
 ## usage
 
